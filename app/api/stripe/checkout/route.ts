@@ -2,7 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("Stripe not configured");
+  return new Stripe(key);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +49,7 @@ export async function POST(request: NextRequest) {
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
+      const stripe = getStripe();
       const customer = await stripe.customers.create({
         email: user.email ?? undefined,
         metadata: { supabase_user_id: user.id },
@@ -59,6 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     const origin = request.nextUrl.origin;
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
