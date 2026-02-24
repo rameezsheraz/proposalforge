@@ -12,11 +12,12 @@ export default async function AnalyticsPage() {
     redirect("/login");
   }
 
-  const { data: proposals = [] } = await supabase
+  const { data } = await supabase
     .from("proposals")
     .select("id, category, status, created_at")
     .eq("user_id", user.id);
 
+  const proposals = data ?? [];
   const total = proposals.length;
   const won = proposals.filter((p) => p.status === "won").length;
   const lost = proposals.filter((p) => p.status === "lost").length;
